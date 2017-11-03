@@ -1,0 +1,55 @@
+## bignum_dec2hex.cmake --- Convert any bignum form dec to hex
+##
+## Copyright (c) 2017 ChienYu Lin
+##
+## Author: ChienYu Lin <cy20lin@gmail.com>
+## License: MIT
+##
+
+include("${CMAKE_CURRENT_LIST_DIR}/assert.cmake")
+
+function(bignum_divide in_dividend in_divisor out_quotient out_remainder)
+  assert_is_dec_uint("${in_dividend}")
+  assert_is_dec_uint("${in_divisor}")
+  set(r "")
+  set(qq "")
+  string(LENGTH "${in_dividend}" len)
+  math(EXPR len "${len} - 1")
+  if("${len}" LESS 0)
+    return()
+  endif()
+  foreach (i RANGE "${len}")
+    string(SUBSTRING "${in_dividend}" "${i}" 1 c)
+    set(r "${r}${c}")
+    math(EXPR q "${r} / ${in_divisor}")
+    math(EXPR r "${r} % ${in_divisor}")
+    if ("${qq}" STREQUAL "")
+      if(NOT "${q}" STREQUAL 0)
+        set(qq "${qq}${q}")
+      endif()
+    else()
+      set(qq "${qq}${q}")
+    endif()
+  endforeach ()
+  if ("${qq}" STREQUAL "")
+    set(qq 0)
+  endif()
+  set("${out_quotient}" "${qq}" PARENT_SCOPE)
+  set("${out_remainder}" "${r}" PARENT_SCOPE)
+endfunction ()
+
+function(bignum_dec2hex number output)
+  assert_is_dec_uint("${number}")
+  set(o "")
+  set(map "0123456789abcdef")
+  set(q "${number}")
+  while(1)
+    bignum_divide("${q}" 16 q r)
+    string(SUBSTRING "${map}" "${r}" 1 c)
+    set(o "${c}${o}")
+    if("${q}" EQUAL 0)
+      break()
+    endif()
+  endwhile()
+  set("${output}" "${o}" PARENT_SCOPE)
+endfunction ()
